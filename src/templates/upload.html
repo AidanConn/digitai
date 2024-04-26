@@ -7,8 +7,8 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <style>
         .logo-container {
-            width: auto;  /* adjust as needed */
-            height: 200px;  /* adjust as needed */
+            width: auto;
+            height: 200px;
             overflow: hidden;
             position: relative;
             margin: auto;
@@ -24,18 +24,51 @@
         }
         body {
             background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
         }
         .container {
             max-width: 500px;
-            margin-top: 100px;
+            margin-top: 50px;
             border: 1px solid #dee2e6;
-            border-radius: 5px;
+            border-radius: 10px;
             padding: 20px;
             background-color: white;
-            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+            box-shadow: 0px 0px 20px rgba(0,0,0,0.1);
         }
         h2 {
-            margin-top: 10px;  /* adjust as needed */
+            margin-top: 10px;
+            color: #343a40;
+            text-align: center;
+        }
+        #canvas-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #canvas {
+            border: 1px solid #ccc;
+            background-color: #f0f0f0;
+            display: inline-block;
+        }
+        .btn {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .prediction-box {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 10px;
+            background-color: #f0f0f0;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+        }
+        .prediction-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #fff;
+            box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+        }
+        .prediction-item p {
+            margin: 5px 0;
         }
     </style>
 </head>
@@ -44,26 +77,116 @@
     <div class="logo-container">
         <img src="{{ url_for('static', filename='cropped.png') }}" alt="Logo" class="logo">
     </div>
-    <h2 class="text-center">Digit Recognizer</h2>
-    <p>Please ensure your image is 400x400 pixels and has a white background.</p>
-    <form action="/predict" method="post" enctype="multipart/form-data" class="mt-3" target="_blank">
-        <div class="custom-file">
-            <input type="file" class="custom-file-input" id="customFile" name="file">
-            <label class="custom-file-label" for="customFile">Choose your file</label>
-        </div>
-        <button type="submit" class="btn btn-primary mt-3 d-block mx-auto">Upload Image</button>
-    </form>
+    <h2>Digit Recognizer</h2>
+    <div id="canvas-container">
+        <canvas id="canvas" width="400" height="400"></canvas>
+    </div>
+    <button id="clearCanvas" class="btn btn-danger">Clear Canvas</button>
+    <button id="submitDrawing" class="btn btn-primary">Submit Drawing</button>
+    <!-- Line speation -->
+    <hr>
+    
+    <p class="text-left mt-3">Last Three Predictions:</p>
+    <div id="predictionResult" class="prediction-box"></div>
+    <p id="websiteCreator" class="text-center mt-3">Made by: Aidan Connaughton</p>
+</div>
+
 <script>
-    $('.custom-file-input').on('change', function() {
-        let fileName = $(this).val().split('\\').pop();
-        $(this).next('.custom-file-label').addClass("selected").html(fileName);
+    $(document).ready(function() {
+        var canvas = document.getElementById('canvas');
+        var context = canvas.getContext('2d');
+
+        context.fillStyle = 'white';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
+        var isDrawing = false;
+        var points = [];
+        var lineWidth = 10;
+
+        function drawSmoothLine(points) {
+            if (points.length < 3) return;
+            context.beginPath();
+            context.moveTo(points[0].x, points[0].y);
+            for (var i = 1; i < points.length - 2; i++) {
+                var xc = (points[i].x + points[i + 1].x) / 2;
+                var yc = (points[i].y + points[i + 1].y) / 2;
+                context.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+            }
+            context.lineTo(points[i].x, points[i].y);
+            context.lineWidth = lineWidth;
+            context.stroke();
+        }
+
+        canvas.addEventListener('mousedown', function(e) {
+            isDrawing = true;
+            points.push({ x: e.offsetX, y: e.offsetY });
+        });
+
+        canvas.addEventListener('mousemove', function(e) {
+            if (isDrawing) {
+                points.push({ x: e.offsetX, y: e.offsetY });
+                drawSmoothLine(points);
+            }
+        });
+
+        canvas.addEventListener('mouseup', function() {
+            isDrawing = false;
+            points = [];
+        });
+
+        canvas.addEventListener('mouseout', function() {
+            isDrawing = false;
+            points = [];
+        });
+
+        $('#clearCanvas').click(function() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = 'white';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+        });
+
+        $('#submitDrawing').click(function() {
+            var imageData = canvas.toDataURL('image/png');
+            submitDrawingToServer(imageData);
+        });
+
+        function submitDrawingToServer(imageData) {
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ image_data: imageData })
+            })
+            .then(response => response.json())
+            .then(data => {
+                var predictionResultBox = document.getElementById('predictionResult');
+                var predictionHTML = '<div class="prediction-item">';
+                predictionHTML += '<p><strong>Image:</strong></p>';
+                predictionHTML += '<img src="' + imageData + '" alt="Drawing" width="200">';
+                predictionHTML += '<p><strong>Prediction:</strong> ' + data.prediction + '</p>';
+                predictionHTML += '<p><strong>Confidence:</strong> ' + data.confidence.toFixed(3) + '%</p>';
+                predictionHTML += '</div>';
+
+                // Add new prediction to the top of the list
+                predictionResultBox.innerHTML = predictionHTML + predictionResultBox.innerHTML;
+
+                // Remove excess prediction items (keep up to 5)
+                var predictionItems = predictionResultBox.getElementsByClassName('prediction-item');
+                while (predictionItems.length > 3) {
+                    predictionResultBox.removeChild(predictionItems[predictionItems.length - 1]);
+                }
+            })
+            .then(data => {
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.fillStyle = 'white';
+                context.fillRect(0, 0, canvas.width, canvas.height);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
     });
 </script>
-
-<div class="container mt-5">
-    <h5 class="text-center">About this Website</h5>
-    <p>This website uses PyTorch for digit recognition. The model was trained on a dataset of size 1055 and was run through 100 epochs for training.</p>
-    <p class="text-center mt-3">Made by: Aidan Connaughton</p>
-</div>
 </body>
 </html>
