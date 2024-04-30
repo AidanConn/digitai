@@ -3,7 +3,6 @@ import torch
 import torch.nn as nn
 import numpy as np
 from PIL import Image, ImageOps
-import re
 import base64
 import io  # Import the io module
 
@@ -77,4 +76,4 @@ def predict():
         return jsonify({'error': str(e)})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()

@@ -6,24 +6,34 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <style>
+
         .logo-container {
             width: auto;
-            height: 200px;
+            height: 150px; /* Reduced height to fit better */
             overflow: hidden;
             position: relative;
             margin: auto;
+            max-width: 100%; /* Ensure the logo container doesn't exceed its parent's width */
+            max-height: 100%; /* Ensure the logo container doesn't exceed its parent's height */
         }
         .logo {
+            max-width: 100%; /* Ensure the logo doesn't exceed its parent's width */
+            max-height: 100%; /* Ensure the logo doesn't exceed its parent's height */
             object-fit: contain;
             position: absolute;
             top: 50%;
             left: 50%;
-            height: 100%;
-            width: auto;
             transform: translate(-50%, -50%);
         }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            background-color: #f8f9fa;
+            background: linear-gradient(45deg, #1f1c2c, #3a506b); /* Dark background gradient */
+            color: #fff; /* Light text color */
             font-family: Arial, sans-serif;
         }
         .container {
@@ -32,90 +42,159 @@
             border: 1px solid #dee2e6;
             border-radius: 10px;
             padding: 20px;
-            background-color: white;
+            background-color: #2f3031; /* Darker container background color */
             box-shadow: 0px 0px 20px rgba(0,0,0,0.1);
         }
         h2 {
             margin-top: 10px;
-            color: #343a40;
+            color: #fff; /* Light text color */
             text-align: center;
+        }
+        /* Add more styles for dark mode */
+        .btn {
+            color: #fff; /* Light button text color */
+        }
+        .btn-primary {
+            background-color: #007bff; /* Adjust primary button color */
+            border-color: #007bff; /* Adjust primary button border color */
+        }
+        .btn-danger {
+            background-color: #dc3545; /* Adjust danger button color */
+            border-color: #dc3545; /* Adjust danger button border color */
+        }
+        .prediction-box {
+            background-color: #343a40; /* Darker prediction box background color */
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0px 2px 5px rgba(0,0,0,0.3); /* Adjust shadow color */
+        }
+        .prediction-item {
+            background-color: #212529; /* Dark prediction item background color */
+            box-shadow: none; /* Remove shadow */
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .prediction-item p {
+            margin: 5px 0;
         }
         #canvas-container {
             text-align: center;
-            margin-bottom: 20px;
         }
         #canvas {
             border: 1px solid #ccc;
             background-color: #f0f0f0;
             display: inline-block;
+            margin: 0 auto; /* Center the canvas */
         }
-        .btn {
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        .prediction-box {
-            margin-top: 20px;
-            padding: 10px;
-            border-radius: 10px;
-            background-color: #f0f0f0;
-            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
-        }
-        .prediction-item {
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 5px;
-            background-color: #fff;
-            box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
-        }
-        .prediction-item p {
-            margin: 5px 0;
+        .btn-container {
+            text-align: center; /* Center the buttons */
         }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="logo-container">
-        <img src="{{ url_for('static', filename='cropped.png') }}" alt="Logo" class="logo">
+        <img src="/static/default-monochrome-white.svg" alt="Logo" class="logo" style="height: 250px;">
     </div>
     <h2>Digit Recognizer</h2>
     <div id="canvas-container">
         <canvas id="canvas" width="400" height="400"></canvas>
     </div>
-    <button id="clearCanvas" class="btn btn-danger">Clear Canvas</button>
-    <button id="submitDrawing" class="btn btn-primary">Submit Drawing</button>
-    <!-- Line speation -->
+    <div class="btn-container"> <!-- Button container -->
+        <button id="clearCanvas" class="btn btn-danger">Clear Canvas</button>
+        <button id="submitDrawing" class="btn btn-primary">Submit Drawing</button>
+    </div>
+    <!-- Line separation -->
     <hr>
-    
+
     <p class="text-left mt-3">Last Three Predictions:</p>
     <div id="predictionResult" class="prediction-box"></div>
-    <p id="websiteCreator" class="text-center mt-3">Made by: Aidan Connaughton</p>
 </div>
 
 <script>
     $(document).ready(function() {
-        var canvas = document.getElementById('canvas');
-        var context = canvas.getContext('2d');
+    var canvas = document.getElementById('canvas');
+    var context = canvas.getContext('2d');
 
-        context.fillStyle = 'white';
-        context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = '#f0f0f0'; // Change the canvas background color
+    context.fillRect(0, 0, canvas.width, canvas.height);
 
-        var isDrawing = false;
-        var points = [];
-        var lineWidth = 10;
+    var isDrawing = false;
+    var points = [];
+    var lineWidth = 20;
+    var radius = 10; // Adjust the radius of the circle points
 
-        function drawSmoothLine(points) {
-            if (points.length < 3) return;
-            context.beginPath();
-            context.moveTo(points[0].x, points[0].y);
-            for (var i = 1; i < points.length - 2; i++) {
-                var xc = (points[i].x + points[i + 1].x) / 2;
-                var yc = (points[i].y + points[i + 1].y) / 2;
-                context.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
-            }
-            context.lineTo(points[i].x, points[i].y);
-            context.lineWidth = lineWidth;
-            context.stroke();
+    function drawSmoothLine(points) {
+        if (points.length < 3) return;
+        context.beginPath();
+        context.moveTo(points[0].x, points[0].y);
+        for (var i = 1; i < points.length - 2; i++) {
+            var xc = (points[i].x + points[i + 1].x) / 2;
+            var yc = (points[i].y + points[i + 1].y) / 2;
+            context.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
         }
+        context.lineTo(points[i].x, points[i].y);
+        context.strokeStyle = '#000'; // Change the color of the line to black
+        context.lineWidth = lineWidth;
+        context.stroke();
+
+        // Draw circles at each point
+        context.fillStyle = '#000'; // Change the color of the circles to black
+        for (var i = 0; i < points.length; i++) {
+            context.beginPath();
+            context.arc(points[i].x, points[i].y, radius, 0, Math.PI * 2);
+            context.fill();
+        }
+    }
+
+
+        // Function to get touch position relative to the canvas
+		function getTouchPos(canvasDom, touchEvent) {
+			var rect = canvasDom.getBoundingClientRect();
+			return {
+				x: touchEvent.touches[0].clientX - rect.left,
+				y: touchEvent.touches[0].clientY - rect.top
+			};
+		}
+
+		canvas.addEventListener('touchstart', function(e) {
+			e.preventDefault();
+			isDrawing = true;
+			var touchPos = getTouchPos(canvas, e);
+			points.push({ x: touchPos.x, y: touchPos.y });
+			redraw();
+		});
+
+		canvas.addEventListener('touchmove', function(e) {
+			e.preventDefault();
+			if (isDrawing) {
+				var touchPos = getTouchPos(canvas, e);
+				points.push({ x: touchPos.x, y: touchPos.y });
+				redraw();
+			}
+		});
+
+		canvas.addEventListener('touchend', function(e) {
+			e.preventDefault();
+			isDrawing = false;
+			points = [];
+		});
+
+		canvas.addEventListener('touchcancel', function(e) {
+			e.preventDefault();
+			isDrawing = false;
+			points = [];
+		});
+
+		function redraw() {
+			context.clearRect(0, 0, canvas.width, canvas.height);
+			context.fillStyle = '#f0f0f0'; // Change the canvas background color
+			context.fillRect(0, 0, canvas.width, canvas.height);
+			drawSmoothLine(points);
+		}
+
+
 
         canvas.addEventListener('mousedown', function(e) {
             isDrawing = true;
@@ -148,7 +227,7 @@
         $('#submitDrawing').click(function() {
             var imageData = canvas.toDataURL('image/png');
             submitDrawingToServer(imageData);
-        });
+        }); 
 
         function submitDrawingToServer(imageData) {
             fetch('/predict', {
@@ -171,7 +250,7 @@
                 // Add new prediction to the top of the list
                 predictionResultBox.innerHTML = predictionHTML + predictionResultBox.innerHTML;
 
-                // Remove excess prediction items (keep up to 5)
+                // Remove excess prediction items (keep up to 3)
                 var predictionItems = predictionResultBox.getElementsByClassName('prediction-item');
                 while (predictionItems.length > 3) {
                     predictionResultBox.removeChild(predictionItems[predictionItems.length - 1]);
@@ -188,5 +267,17 @@
         }
     });
 </script>
+
+<footer>
+    <div class="container">
+        <p>&copy; 2024 Aidan Connaughton. All rights reserved.</p>
+        <p>This is a personal project created by Aidan Connaughton for educational purposes.</p>
+        <!-- GitHub link with MIT License -->
+        <a class="github-link" href="https://github.com/AidanConn/digitai" target="_blank">View on GitHub</a>
+        <span> | </span>
+        <a class="github-link" href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0 License</a>
+    </div>
+</footer>
+
 </body>
 </html>
