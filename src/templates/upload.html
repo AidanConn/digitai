@@ -16,6 +16,7 @@
             max-width: 100%; /* Ensure the logo container doesn't exceed its parent's width */
             max-height: 100%; /* Ensure the logo container doesn't exceed its parent's height */
         }
+
         .logo {
             max-width: 100%; /* Ensure the logo doesn't exceed its parent's width */
             max-height: 100%; /* Ensure the logo doesn't exceed its parent's height */
@@ -25,6 +26,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
         }
+
         html, body {
             height: 100%;
             margin: 0;
@@ -36,6 +38,7 @@
             color: #fff; /* Light text color */
             font-family: Arial, sans-serif;
         }
+
         .container {
             max-width: 500px;
             margin-top: 50px;
@@ -43,31 +46,37 @@
             border-radius: 10px;
             padding: 20px;
             background-color: #2f3031; /* Darker container background color */
-            box-shadow: 0px 0px 20px rgba(0,0,0,0.1);
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
         }
+
         h2 {
             margin-top: 10px;
             color: #fff; /* Light text color */
             text-align: center;
         }
+
         /* Add more styles for dark mode */
         .btn {
             color: #fff; /* Light button text color */
         }
+
         .btn-primary {
             background-color: #007bff; /* Adjust primary button color */
             border-color: #007bff; /* Adjust primary button border color */
         }
+
         .btn-danger {
             background-color: #dc3545; /* Adjust danger button color */
             border-color: #dc3545; /* Adjust danger button border color */
         }
+
         .prediction-box {
             background-color: #343a40; /* Darker prediction box background color */
             border-radius: 10px;
             padding: 15px;
-            box-shadow: 0px 2px 5px rgba(0,0,0,0.3); /* Adjust shadow color */
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3); /* Adjust shadow color */
         }
+
         .prediction-item {
             background-color: #212529; /* Dark prediction item background color */
             box-shadow: none; /* Remove shadow */
@@ -75,18 +84,22 @@
             padding: 10px;
             border-radius: 5px;
         }
+
         .prediction-item p {
             margin: 5px 0;
         }
+
         #canvas-container {
             text-align: center;
         }
+
         #canvas {
             border: 1px solid #ccc;
             background-color: #f0f0f0;
             display: inline-block;
             margin: 0 auto; /* Center the canvas */
         }
+
         .btn-container {
             text-align: center; /* Center the buttons */
         }
@@ -113,121 +126,120 @@
 </div>
 
 <script>
-    $(document).ready(function() {
-    var canvas = document.getElementById('canvas');
-    var context = canvas.getContext('2d');
+    $(document).ready(function () {
+        var canvas = document.getElementById('canvas');
+        var context = canvas.getContext('2d');
 
-    context.fillStyle = '#f0f0f0'; // Change the canvas background color
-    context.fillRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = '#f0f0f0'; // Change the canvas background color
+        context.fillRect(0, 0, canvas.width, canvas.height);
 
-    var isDrawing = false;
-    var points = [];
-    var lineWidth = 20;
-    var radius = 10; // Adjust the radius of the circle points
+        var isDrawing = false;
+        var points = [];
+        var lineWidth = 20;
+        var radius = 10; // Adjust the radius of the circle points
 
-    function drawSmoothLine(points) {
-        if (points.length < 3) return;
-        context.beginPath();
-        context.moveTo(points[0].x, points[0].y);
-        for (var i = 1; i < points.length - 2; i++) {
-            var xc = (points[i].x + points[i + 1].x) / 2;
-            var yc = (points[i].y + points[i + 1].y) / 2;
-            context.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
-        }
-        context.lineTo(points[i].x, points[i].y);
-        context.strokeStyle = '#000'; // Change the color of the line to black
-        context.lineWidth = lineWidth;
-        context.stroke();
-
-        // Draw circles at each point
-        context.fillStyle = '#000'; // Change the color of the circles to black
-        for (var i = 0; i < points.length; i++) {
+        function drawSmoothLine(points) {
+            if (points.length < 3) return;
             context.beginPath();
-            context.arc(points[i].x, points[i].y, radius, 0, Math.PI * 2);
-            context.fill();
+            context.moveTo(points[0].x, points[0].y);
+            for (var i = 1; i < points.length - 2; i++) {
+                var xc = (points[i].x + points[i + 1].x) / 2;
+                var yc = (points[i].y + points[i + 1].y) / 2;
+                context.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+            }
+            context.lineTo(points[i].x, points[i].y);
+            context.strokeStyle = '#000'; // Change the color of the line to black
+            context.lineWidth = lineWidth;
+            context.stroke();
+
+            // Draw circles at each point
+            context.fillStyle = '#000'; // Change the color of the circles to black
+            for (var i = 0; i < points.length; i++) {
+                context.beginPath();
+                context.arc(points[i].x, points[i].y, radius, 0, Math.PI * 2);
+                context.fill();
+            }
         }
-    }
 
 
         // Function to get touch position relative to the canvas
-		function getTouchPos(canvasDom, touchEvent) {
-			var rect = canvasDom.getBoundingClientRect();
-			return {
-				x: touchEvent.touches[0].clientX - rect.left,
-				y: touchEvent.touches[0].clientY - rect.top
-			};
-		}
+        function getTouchPos(canvasDom, touchEvent) {
+            var rect = canvasDom.getBoundingClientRect();
+            return {
+                x: touchEvent.touches[0].clientX - rect.left,
+                y: touchEvent.touches[0].clientY - rect.top
+            };
+        }
 
-		canvas.addEventListener('touchstart', function(e) {
-			e.preventDefault();
-			isDrawing = true;
-			var touchPos = getTouchPos(canvas, e);
-			points.push({ x: touchPos.x, y: touchPos.y });
-			redraw();
-		});
-
-		canvas.addEventListener('touchmove', function(e) {
-			e.preventDefault();
-			if (isDrawing) {
-				var touchPos = getTouchPos(canvas, e);
-				points.push({ x: touchPos.x, y: touchPos.y });
-				redraw();
-			}
-		});
-
-		canvas.addEventListener('touchend', function(e) {
-			e.preventDefault();
-			isDrawing = false;
-			points = [];
-		});
-
-		canvas.addEventListener('touchcancel', function(e) {
-			e.preventDefault();
-			isDrawing = false;
-			points = [];
-		});
-
-		function redraw() {
-			context.clearRect(0, 0, canvas.width, canvas.height);
-			context.fillStyle = '#f0f0f0'; // Change the canvas background color
-			context.fillRect(0, 0, canvas.width, canvas.height);
-			drawSmoothLine(points);
-		}
-
-
-
-        canvas.addEventListener('mousedown', function(e) {
+        canvas.addEventListener('touchstart', function (e) {
+            e.preventDefault();
             isDrawing = true;
-            points.push({ x: e.offsetX, y: e.offsetY });
+            var touchPos = getTouchPos(canvas, e);
+            points.push({x: touchPos.x, y: touchPos.y});
+            redraw();
         });
 
-        canvas.addEventListener('mousemove', function(e) {
+        canvas.addEventListener('touchmove', function (e) {
+            e.preventDefault();
             if (isDrawing) {
-                points.push({ x: e.offsetX, y: e.offsetY });
+                var touchPos = getTouchPos(canvas, e);
+                points.push({x: touchPos.x, y: touchPos.y});
+                redraw();
+            }
+        });
+
+        canvas.addEventListener('touchend', function (e) {
+            e.preventDefault();
+            isDrawing = false;
+            points = [];
+        });
+
+        canvas.addEventListener('touchcancel', function (e) {
+            e.preventDefault();
+            isDrawing = false;
+            points = [];
+        });
+
+        function redraw() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = '#f0f0f0'; // Change the canvas background color
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            drawSmoothLine(points);
+        }
+
+
+        canvas.addEventListener('mousedown', function (e) {
+            isDrawing = true;
+            points.push({x: e.offsetX, y: e.offsetY});
+        });
+
+        canvas.addEventListener('mousemove', function (e) {
+            if (isDrawing) {
+                points.push({x: e.offsetX, y: e.offsetY});
                 drawSmoothLine(points);
             }
         });
 
-        canvas.addEventListener('mouseup', function() {
+        canvas.addEventListener('mouseup', function () {
             isDrawing = false;
             points = [];
         });
 
-        canvas.addEventListener('mouseout', function() {
+        canvas.addEventListener('mouseout', function () {
             isDrawing = false;
             points = [];
         });
 
-        $('#clearCanvas').click(function() {
+        $('#clearCanvas').click(function () {
             context.clearRect(0, 0, canvas.width, canvas.height);
             context.fillStyle = 'white';
             context.fillRect(0, 0, canvas.width, canvas.height);
         });
 
-        $('#submitDrawing').click(function() {
+        $('#submitDrawing').click(function () {
             var imageData = canvas.toDataURL('image/png');
             submitDrawingToServer(imageData);
-        }); 
+        });
 
         function submitDrawingToServer(imageData) {
             fetch('/predict', {
@@ -235,36 +247,38 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ image_data: imageData })
+                body: JSON.stringify({image_data: imageData})
             })
-            .then(response => response.json())
-            .then(data => {
-                var predictionResultBox = document.getElementById('predictionResult');
-                var predictionHTML = '<div class="prediction-item">';
-                predictionHTML += '<p><strong>Image:</strong></p>';
-                predictionHTML += '<img src="' + imageData + '" alt="Drawing" width="200">';
-                predictionHTML += '<p><strong>Prediction:</strong> ' + data.prediction + '</p>';
-                predictionHTML += '<p><strong>Confidence:</strong> ' + data.confidence.toFixed(3) + '%</p>';
-                predictionHTML += '</div>';
+                .then(response => response.json())
+                .then(data => {
+                    var predictionResultBox = document.getElementById('predictionResult');
+                    var predictionHTML = '<div class="prediction-item">';
+                    predictionHTML += '<p><strong>Image:</strong></p>';
+                    predictionHTML += '<img src="' + imageData + '" alt="Drawing" width="200">';
+                    predictionHTML += '<p><strong>Prediction:</strong> ' + data.prediction + '</p>';
+                    predictionHTML += '<p><strong>Confidence:</strong> ' + (data.confidence ? data.confidence.toFixed(3) + '%' : 'N/A') + '</p>'; // Handle confidence property
+                    predictionHTML += '</div>';
 
-                // Add new prediction to the top of the list
-                predictionResultBox.innerHTML = predictionHTML + predictionResultBox.innerHTML;
+                    // Add new prediction to the top of the list
+                    predictionResultBox.innerHTML = predictionHTML + predictionResultBox.innerHTML;
 
-                // Remove excess prediction items (keep up to 3)
-                var predictionItems = predictionResultBox.getElementsByClassName('prediction-item');
-                while (predictionItems.length > 3) {
-                    predictionResultBox.removeChild(predictionItems[predictionItems.length - 1]);
-                }
-            })
-            .then(data => {
-                context.clearRect(0, 0, canvas.width, canvas.height);
-                context.fillStyle = 'white';
-                context.fillRect(0, 0, canvas.width, canvas.height);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+                    // Remove excess prediction items (keep up to 5)
+                    var predictionItems = predictionResultBox.getElementsByClassName('prediction-item');
+                    while (predictionItems.length > 3) {
+                        predictionResultBox.removeChild(predictionItems[predictionItems.length - 1]);
+                    }
+                })
+                .then(data => {
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+                    context.fillStyle = 'white';
+                    context.fillRect(0, 0, canvas.width, canvas.height);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
         }
+
+
     });
 </script>
 
@@ -275,7 +289,8 @@
         <!-- GitHub link with MIT License -->
         <a class="github-link" href="https://github.com/AidanConn/digitai" target="_blank">View on GitHub</a>
         <span> | </span>
-       <a class="github-link" href="https://github.com/AidanConn/digitai/blob/main/LICENSE.md" target="_blank">MIT License</a>
+        <a class="github-link" href="https://github.com/AidanConn/digitai/blob/main/LICENSE.md" target="_blank">MIT
+            License</a>
     </div>
 </footer>
 

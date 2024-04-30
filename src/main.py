@@ -3,10 +3,12 @@ import torch
 import torch.nn as nn
 import numpy as np
 from PIL import Image, ImageOps
+import re
 import base64
 import io  # Import the io module
 
 app = Flask(__name__)
+
 
 # Load the model
 class Model(nn.Module):
@@ -27,9 +29,11 @@ class Model(nn.Module):
         x = self.fc2(x)
         return x
 
+
 model = Model()
 model.load_state_dict(torch.load("model.pth", map_location=torch.device('cpu')))
 model.eval()
+
 
 def preprocess_image(image_data):
     # Remove metadata from image data string
@@ -54,26 +58,34 @@ def preprocess_image(image_data):
     image_tensor = image_tensor.unsqueeze(0).unsqueeze(0)
     return image_tensor
 
+
 @app.route('/')
 def upload_form():
     return render_template('upload.html')
+
 
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
         image_data = request.json['image_data']
+        # Debugging
+        print(image_data[:100])
         image_tensor = preprocess_image(image_data)
         with torch.no_grad():
             output = model(image_tensor)
             predicted = torch.argmax(output, dim=1).item()
             confidence = torch.nn.functional.softmax(output, dim=1)[0][predicted].item() * 100
-
+            # Debugging
+            print("Predicted:", predicted)
+            print("Confidence:", confidence)
             if predicted == 10:
                 return jsonify({'prediction': 'No digit detected', 'confidence': confidence})
             else:
                 return jsonify({'prediction': predicted, 'confidence': confidence})
     except Exception as e:
+        print("Error:", str(e))
         return jsonify({'error': str(e)})
+
 
 if __name__ == '__main__':
     app.run()
