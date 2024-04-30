@@ -1,8 +1,6 @@
 # DigitAI
 
-DigitAI is an innovative web application designed to empower users to explore the fascinating world of artificial intelligence and handwritten digit recognition. Harnessing the power of PyTorch, DigitAI provides a seamless experience where users can express their creativity by drawing digits directly on an HTML canvas.
-
-Once submitted, DigitAI employs a sophisticated convolutional neural network (CNN) model to accurately predict the digit drawn by the user. From zero to nine, each digit is analyzed with precision, offering users a glimpse into the inner workings of modern machine learning algorithms.
+DigitAI is a web application enabling users to explore AI and handwritten digit recognition. Utilizing PyTorch, users can draw digits on an HTML canvas. Upon submission, DigitAI employs a CNN model, created using PyTorch, to predict the drawn digit, offering insights into modern machine learning.
 
 ## Features
 
